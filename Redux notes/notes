@@ -1,0 +1,942 @@
+================================================
+REDUX CRASH COURSE - NOTES
+Advanced Technologies
+================================================
+
+SECTION 3.1 - What is Redux?
+------------------------------
+- Redux is a state management tool
+- Allows us to share state among different components
+  (not only down the component tree like React does)
+
+
+REDUX CRASH COURSE OVERVIEW
+------------------------------
+- Learn the fundamentals of Redux
+- Code along in Visual Studio Code while watching
+- Take notes as you go
+- If stuck, look it up on Google to practice
+  your documentation and research skills
+
+
+TIPS
+------------------------------
+- Always code along, don't just watch
+- Practice looking up documentation
+- If you can't find the answer on Google, ask for help
+
+================================================
+END OF NOTES
+================================================
+
+
+ADVANTAGES of Redux:
+  - Only re-renders components that actually need
+    the changed data (better performance)
+  - Powerful DevTools to see every state change
+    in real time
+  - Handles complex state and async API calls really well
+
+Best used for:
+  - Large apps
+  - Shopping carts
+  - Complex dashboards
+  - Enterprise/company level apps
+
+
+SIMPLE RULE OF THUMB
+------------------------------
+  Small App   -->  useContext
+  Medium App  -->  Either works
+  Large App   -->  Redux
+
+
+BOTTOM LINE
+------------------------------
+  useContext = small toolbox, great for quick jobs
+  Redux      = full workshop, handles big jobs better
+
+  Most real world jobs and large company codebases
+  use Redux. Learning it is definitely worth it!
+
+================================================
+END OF NOTES
+================================================
+
+
+
+
+
+
+
+================================================
+REDUX CRASH COURSE - DETAILED NOTES
+Advanced Technologies - Section 3.1
+================================================
+
+NOTE: We are NOT using Redux directly for this project.
+      We will be using REDUX TOOLKIT instead.
+
+------------------------------------------------
+WHAT IS REDUX?
+------------------------------------------------
+- Redux is a state management tool
+- Allows us to share state among different components
+  (not only down the component tree like normal React)
+
+Example without Redux:
+  - App component passes state DOWN to Counter.js
+  - Counter2.js also needs the same state
+  - Without Redux, sharing between siblings is difficult
+
+Example with Redux:
+  - The "count state" is stored in the Redux Store
+  - Both Counter.js AND Counter2.js can access it
+    directly without passing props through parent
+
+
+------------------------------------------------
+HOW DOES REDUX WORK?
+------------------------------------------------
+The flow looks like this:
+
+  [App]
+    |
+    |-----> [Counter2.js]
+    |-----> [Counter.js]
+                |
+                | (reducer)
+                v
+         [Redux Store]
+              (count state)
+              (user state)
+                |
+                | (provides state back to App)
+                v
+             [App]
+
+Key parts:
+  - Redux Store  = where ALL your shared state lives
+  - Reducer      = the function that updates the store
+  - Components connect to the store to read/update state
+
+Another example:
+  - Account.js and Login.js both need "user" state
+  - The Redux Store holds "user" state
+  - A reducer sends updates back to the store
+  - Both components can access user state directly
+
+
+------------------------------------------------
+HOW TO USE REDUX (4 Steps)
+------------------------------------------------
+1. Create a Redux Store and pass it to the App component
+2. Create a slice for the state you want to share
+3. Pass the slice into the Redux store
+4. Use the useSelector and useDispatch hooks to use the state
+
+
+------------------------------------------------
+SETTING UP REDUX TOOLKIT (Installation)
+------------------------------------------------
+Install Redux Toolkit and React-Redux:
+
+  npm install @reduxjs/toolkit react-redux
+
+
+------------------------------------------------
+PROJECT FILE STRUCTURE
+------------------------------------------------
+src/
+  components/
+    Counter.js
+    Counter2.js
+  redux/
+    store.js        <-- Redux store lives here
+  App.js
+  index.js
+
+
+------------------------------------------------
+STEP 1 - CREATE THE REDUX STORE (store.js)
+------------------------------------------------
+File: src/app/store.js
+
+  import { configureStore } from '@reduxjs/toolkit'
+
+  const store = configureStore({
+    reducer: {},
+  })
+
+  export default store
+
+- configureStore comes from Redux Toolkit
+- reducer starts as empty object (we add slices later)
+
+
+------------------------------------------------
+STEP 2 - PROVIDE THE STORE TO REACT (index.js)
+------------------------------------------------
+File: src/index.js
+
+  import React from 'react'
+  import ReactDOM from 'react-dom/client'
+  import './index.css'
+  import App from './App'
+  import reportWebVitals from './reportWebVitals'
+  import { Provider } from 'react-redux'
+  import { store } from './redux/store'
+
+  const root = ReactDOM.createRoot(document.getElementById('root'))
+  root.render(
+    <React.StrictMode>
+      <Provider store={store}>
+        <App />
+      </Provider>
+    </React.StrictMode>
+  )
+
+Key points:
+  - Import Provider from 'react-redux'
+  - Import your store
+  - Wrap <App /> inside <Provider store={store}>
+  - This gives ALL components access to the Redux store
+
+
+------------------------------------------------
+APP.JS STRUCTURE (example)
+------------------------------------------------
+File: src/App.js
+
+  import logo from './logo.svg'
+  import './App.css'
+  import Counter from './components/Counter'
+  import Counter2 from './components/Counter2'
+
+  function App() {
+    return (
+      <div>
+        <Counter />
+        <Counter2 />
+      </div>
+    )
+  }
+
+  export default App
+
+
+------------------------------------------------
+REDUX DEVTOOLS
+------------------------------------------------
+- Redux is "Debuggable"
+- Redux DevTools (browser extension) lets you trace:
+    * WHEN state changed
+    * WHERE it changed
+    * HOW it changed
+- Supports "time-travel debugging"
+- Can send error reports to a server
+
+
+------------------------------------------------
+OTHER IMPORTANT REDUX LIBRARIES
+------------------------------------------------
+- React-Redux     = Official React bindings for Redux
+- Redux Toolkit   = The official, opinionated, batteries-included
+                    toolset for efficient Redux development
+
+
+------------------------------------------------
+KEY TERMS TO REMEMBER
+------------------------------------------------
+  Store     = The central place where all state is kept
+  Reducer   = Function that updates the store
+  Slice     = A piece of state + its reducer logic
+  Provider  = React component that gives app access to store
+  useSelector  = Hook to READ state from the store
+  useDispatch  = Hook to SEND updates to the store
+
+
+================================================
+END OF NOTES
+================================================
+
+
+================================================
+REDUX CRASH COURSE - SLICE NOTES
+Advanced Technologies - Section 3.1
+================================================
+
+------------------------------------------------
+WHAT IS A SLICE?
+------------------------------------------------
+1. A Redux store is made up of slices
+2. A slice contains your state AND a bunch of
+   functions (reducers) to change that state
+
+Think of it like this:
+  - The Store is a pizza
+  - Each Slice is one piece of that pizza
+  - Each slice holds its own state and logic
+
+
+------------------------------------------------
+HOW TO CREATE A SLICE
+------------------------------------------------
+Step 1: Create a new file in your redux folder
+        File: src/redux/counterSlice.js
+
+Step 2: Go to Redux Toolkit website (redux-toolkit.js.org)
+        and use the counterSlice example code as a starting point
+
+Step 3: Customize it for your needs
+
+
+------------------------------------------------
+counterSlice.js - FULL CODE WITH EXPLANATION
+------------------------------------------------
+
+// Import createSlice from Redux Toolkit
+import { createSlice } from '@reduxjs/toolkit'
+
+// Define the initial state - count starts at 0
+const initialState = {
+  value: 0,
+}
+
+// createSlice automatically generates action creators
+// and action types for each reducer
+export const counterSlice = createSlice({
+
+  // name identifies the slice
+  // used as a prefix for action types e.g. "counter/increment"
+  name: 'counter',
+
+  // pass in the initialState defined above
+  initialState,
+
+  // reducers = object containing functions that change our state
+  reducers: {
+
+    // increment action - adds 1 to count
+    increment: (state) => {
+      // Redux Toolkit allows "mutating" logic in reducers
+      // It doesn't actually mutate the state because it uses
+      // the Immer library under the hood, which detects changes
+      // to a "draft state" and produces a new immutable state
+      state.value += 1
+    },
+
+    // decrement action - subtracts 1 from count
+    decrement: (state) => {
+      state.value -= 1
+    },
+
+    // incrementByAmount - takes a payload value and adds it to count
+    // action.payload = the value passed in when action is dispatched
+    incrementByAmount: (state, action) => {
+      state.value += action.payload
+    },
+  },
+})
+
+// Action creators are auto-generated for each reducer function
+// Destructure and export each action so components can use them
+export const { increment, decrement, incrementByAmount } = counterSlice.actions
+
+// Export the reducer to be added to the store
+export default counterSlice.reducer
+
+
+------------------------------------------------
+WHAT IS THE DIFFERENCE BETWEEN REDUCERS AND ACTIONS?
+------------------------------------------------
+
+ACTIONS:
+  - An action is like a COMMAND or a MESSAGE
+  - It describes WHAT happened or WHAT you want to do
+  - Example: "increment", "decrement", "incrementByAmount"
+  - Actions can carry extra data called "payload"
+    Example: incrementByAmount(5) -- the payload is 5
+  - You DISPATCH an action to trigger a state change
+
+REDUCERS:
+  - A reducer is the FUNCTION that does the actual work
+  - It takes the current state + the action
+  - It decides HOW to change the state based on the action
+  - It returns the NEW state
+  - Reducers must be PURE functions (no side effects)
+
+Simple analogy:
+  - Action  = "I want to deposit $50 into my account"
+  - Reducer = The bank teller who actually processes
+              the deposit and updates your balance
+
+Flow:
+  Component --> dispatches ACTION --> REDUCER processes it
+  --> Redux STORE gets updated --> Component re-renders
+
+
+------------------------------------------------
+FILE STRUCTURE FOR SLICE
+------------------------------------------------
+src/
+  redux/
+    counterSlice.js    <-- your slice lives here
+    store.js           <-- store imports the slice reducer
+
+
+------------------------------------------------
+ADDING SLICE TO THE STORE (store.js)
+------------------------------------------------
+After creating the slice, add its reducer to the store:
+
+  import { configureStore } from '@reduxjs/toolkit'
+  import counterReducer from './counterSlice'
+
+  const store = configureStore({
+    reducer: {
+      counter: counterReducer,
+    },
+  })
+
+  export default store
+
+
+------------------------------------------------
+BROWSER RESULT
+------------------------------------------------
+When set up correctly, the app shows:
+  - "Count is 0"
+  - Increment button
+  - Decrement button
+  - "This is Counter2" (also connected to same store)
+  - Both counters share the same Redux state!
+
+
+------------------------------------------------
+KEY TERMS - SLICE SUMMARY
+------------------------------------------------
+  createSlice      = Redux Toolkit function to create a slice
+  name             = identifies the slice (used in action types)
+  initialState     = the starting value of the state
+  reducers         = object of functions that update state
+  action.payload   = the extra data sent with an action
+  Immer library    = used internally, allows "mutating" syntax
+                     while keeping state immutable behind scenes
+  export actions   = lets components dispatch actions
+  export reducer   = lets the store use this slice's logic
+
+================================================
+END OF NOTES
+================================================
+
+
+================================================
+HOW TO PASS A SLICE INTO THE REDUX STORE
+Advanced Technologies - Section 3.1
+================================================
+
+
+------------------------------------------------
+WHAT ARE WE DOING HERE?
+------------------------------------------------
+After creating a slice (counterSlice.js),
+we need to REGISTER it into the Redux Store.
+
+Think of it like this:
+  - You built a new LEGO section (the slice)
+  - Now you need to put it INTO the toy box (the store)
+  - Until you do this, the store does not know it exists!
+
+
+------------------------------------------------
+THE CODE - store.js
+------------------------------------------------
+
+import { configureStore } from '@reduxjs/toolkit'
+import { counterSlice } from './counterSlice'
+
+export const store = configureStore({
+  reducer: {
+    counter: counterSlice
+  },
+})
+
+
+------------------------------------------------
+LINE BY LINE EXPLANATION
+------------------------------------------------
+
+LINE 1:
+  import { configureStore } from '@reduxjs/toolkit'
+
+  - We import configureStore from Redux Toolkit
+  - configureStore is the function that CREATES the store
+  - It is like buying the toy box from the store
+
+
+LINE 2:
+  import { counterSlice } from './counterSlice'
+
+  - We import our counterSlice from the counterSlice.js file
+  - This is the slice (section) we already built
+  - We bring it here so we can add it to the store
+
+  NOTE: Make sure the file path is correct!
+        './counterSlice' means counterSlice.js is in
+        the SAME folder as store.js
+
+
+LINE 3-7:
+  export const store = configureStore({
+    reducer: {
+      counter: counterSlice
+    },
+  })
+
+  - configureStore() creates the Redux store
+  - Inside it, we pass a "reducer" object
+  - The reducer object holds ALL our slices
+  - "counter" is the KEY NAME we give this slice
+    (we use this name later when reading state)
+  - counterSlice is the ACTUAL slice we imported
+
+
+------------------------------------------------
+WHAT IS THE "counter" KEY?
+------------------------------------------------
+The key name "counter" is very important!
+
+  reducer: {
+    counter: counterSlice   <-- "counter" is the key
+  }
+
+When you want to READ this state in a component
+using useSelector, you use this key:
+
+  state.counter.value
+
+  - state        = the whole Redux store
+  - counter      = the key name we gave the slice
+  - value        = the actual data inside the slice
+
+If you named it "myCount" instead:
+  reducer: {
+    myCount: counterSlice
+  }
+
+Then you would read it as:
+  state.myCount.value
+
+
+------------------------------------------------
+IMPORTANT NOTE - counterSlice vs counterSlice.reducer
+------------------------------------------------
+There is a common mistake to watch out for!
+
+WRONG (what the code above shows):
+  import { counterSlice } from './counterSlice'
+  reducer: { counter: counterSlice }
+
+  This imports the whole SLICE OBJECT
+  which includes name, actions, AND reducer
+
+CORRECT way (best practice):
+  import counterReducer from './counterSlice'
+  reducer: { counter: counterReducer }
+
+  This imports JUST the reducer part of the slice
+  because configureStore only needs the reducer
+
+  In counterSlice.js the default export is:
+    export default counterSlice.reducer
+
+  So importing it as "counterReducer" gives you
+  just the reducer function the store needs!
+
+
+------------------------------------------------
+THE FULL CORRECT store.js CODE
+------------------------------------------------
+
+  import { configureStore } from '@reduxjs/toolkit'
+  import counterReducer from './counterSlice'
+
+  export const store = configureStore({
+    reducer: {
+      counter: counterReducer,
+    },
+  })
+
+  export default store
+
+
+------------------------------------------------
+ADDING MORE SLICES LATER
+------------------------------------------------
+As your app grows, you add more slices like this:
+
+  import counterReducer from './counterSlice'
+  import userReducer from './userSlice'
+  import cartReducer from './cartSlice'
+
+  export const store = configureStore({
+    reducer: {
+      counter: counterReducer,
+      user: userReducer,
+      cart: cartReducer,
+    },
+  })
+
+Each slice gets its own KEY in the reducer object!
+
+
+------------------------------------------------
+SIMPLE SUMMARY
+------------------------------------------------
+1. Create your slice  (counterSlice.js)
+2. Import the slice reducer into store.js
+3. Add it to the reducer object inside configureStore
+4. Give it a key name (e.g. "counter")
+5. Now the store knows about your slice!
+6. Components can now read/update that state
+
+  counterSlice.js  -->  imported into  -->  store.js
+  store.js         -->  wrapped around -->  index.js (Provider)
+  Provider         -->  gives access   -->  ALL components
+
+================================================
+END OF NOTES
+================================================
+
+
+================================================
+USING THE REDUX STORE - useSelector & useDispatch
+Advanced Technologies - Section 3.1
+================================================
+
+
+------------------------------------------------
+WHAT IS useSelector?
+------------------------------------------------
+useSelector is a hook that lets you READ/GET data
+from the Redux store inside any component.
+
+Think of it like this:
+  - The Redux Store is a toybox
+  - useSelector is you LOOKING INTO the toybox
+    and picking out the toy you want
+
+Syntax:
+  const count = useSelector((state) => state.counter.count)
+
+Breaking it down:
+  - state         = the ENTIRE Redux store
+  - state.counter = the "counter" slice (the key name
+                    we gave it in store.js)
+  - state.counter.count = the actual count VALUE
+                          inside the counter slice
+
+
+------------------------------------------------
+WHERE DOES "counter" COME FROM IN THE CONSOLE?
+------------------------------------------------
+Great question! The word "counter" comes from
+YOUR store.js file where you registered the slice:
+
+  configureStore({
+    reducer: {
+      counter: counterReducer   <-- THIS is where it comes from!
+    }
+  })
+
+The KEY NAME you give the slice in store.js
+is what you use to access it with useSelector.
+
+So if you named it "myCounter" in store.js:
+  reducer: { myCounter: counterReducer }
+
+Then you would access it like:
+  state.myCounter.count
+
+In the browser console you can see:
+  { counter: { count: 0, name: "jack" } }
+  This shows the store has a "counter" section
+  with count and name inside it.
+
+
+------------------------------------------------
+WHAT IS useDispatch?
+------------------------------------------------
+useDispatch is a hook that lets you SEND actions
+to the Redux store to UPDATE the state.
+
+Think of it like this:
+  - useDispatch is the REMOTE CONTROL
+  - You press a button (dispatch an action)
+  - The store receives it and updates the state
+
+Syntax:
+  const dispatch = useDispatch()
+  dispatch(increment())    // sends increment action to store
+  dispatch(decrement())    // sends decrement action to store
+
+
+------------------------------------------------
+HOW DO COMPONENTS REFERENCE ACTIONS IN counterSlice?
+------------------------------------------------
+You import the actions directly from counterSlice.js!
+
+In counterSlice.js we exported the actions like this:
+  export const { increment, decrement, incrementByAmount }
+    = counterSlice.actions
+
+So in your component you import them:
+  import { increment, decrement, incrementByAmount }
+    from '../redux/counterSlice'
+
+Then use them with dispatch:
+  dispatch(increment())
+  dispatch(decrement())
+  dispatch(incrementByAmount(20))
+
+
+------------------------------------------------
+FULL Counter.js CODE - EXPLAINED LINE BY LINE
+------------------------------------------------
+
+import { useState } from "react"
+import Counter2 from "./Counter2"
+import { useSelector } from "react-redux"
+import { useDispatch } from "react-redux"
+import { decrement, increment } from "../redux/counterSlice"
+
+export default function Counter() {
+
+  // useSelector reads the count from the Redux store
+  // state = entire store
+  // state.counter = our counter slice
+  // state.counter.count = the actual count number
+  const count = useSelector(state => state.counter.count)
+
+  // useDispatch gives us the ability to send actions
+  const dispatch = useDispatch()
+
+  return (
+    <div>
+      <h1>Count is {count}</h1>
+
+      <button
+        onClick={() => dispatch(increment())}
+      >
+        Increment
+      </button>
+
+      <button
+        onClick={() => dispatch(decrement())}
+      >
+        Decrement
+      </button>
+
+    </div>
+  )
+}
+
+Key points:
+  - We NO LONGER use useState for count!
+  - count comes from the Redux store via useSelector
+  - Buttons use dispatch to send actions to the store
+  - When the store updates, the component re-renders
+
+
+------------------------------------------------
+CAN THIS BE USED ANYWHERE IN THE APP?
+------------------------------------------------
+YES! That is the whole POINT of Redux!
+
+ANY component in your app can:
+  1. READ state using useSelector
+  2. UPDATE state using useDispatch
+
+As long as:
+  - Your app is wrapped in <Provider store={store}>
+    in index.js (which we already set up)
+  - You import useSelector and/or useDispatch
+  - You import the actions from the slice
+
+That is all you need!
+
+
+------------------------------------------------
+WHAT TO IMPORT TO USE REDUX ANYWHERE
+------------------------------------------------
+In ANY component that needs Redux:
+
+  // To READ state from store
+  import { useSelector } from 'react-redux'
+
+  // To SEND/UPDATE state in store
+  import { useDispatch } from 'react-redux'
+
+  // Import the specific actions you need
+  import { increment, decrement, incrementByAmount }
+    from '../redux/counterSlice'
+    (adjust the path based on your file location)
+
+
+------------------------------------------------
+Counter2.js - USING REDUX IN A SECOND COMPONENT
+------------------------------------------------
+Yes! Counter2.js can use the EXACT SAME Redux state!
+Both Counter.js and Counter2.js share the same count!
+
+Counter2.js code:
+
+  import { useState } from "react"
+  import { useDispatch } from "react-redux"
+  import { decrement, increment } from "../redux/counterSlice"
+
+  export default function Counter2() {
+
+    // useDispatch to send actions to the store
+    const dispatch = useDispatch()
+
+    return (
+      <div>
+        <h1>This is Counter2</h1>
+        <button onClick={() => dispatch(increment())}>
+          Increment
+        </button>
+        <button onClick={() => dispatch(decrement())}>
+          Decrement
+        </button>
+      </div>
+    )
+  }
+
+IMPORTANT: When you click Increment in Counter2,
+it updates the SAME count in the Redux store!
+So Counter.js ALSO updates automatically!
+Both components share the same state - that is Redux!
+
+
+------------------------------------------------
+INCREMENT BY AMOUNT - incrementByAmount
+------------------------------------------------
+incrementByAmount lets you add a specific number
+to the count instead of just adding 1.
+
+In counterSlice.js it is defined as:
+  incrementByAmount: (state, action) => {
+    state.count += action.payload
+  }
+
+  - action.payload = the number you pass in
+  - Example: dispatch(incrementByAmount(20))
+    --> adds 20 to the count
+  - Example: dispatch(incrementByAmount(200))
+    --> adds 200 to the count
+
+In Counter.js add a new button:
+  import { increment, decrement, incrementByAmount }
+    from "../redux/counterSlice"
+
+  <button
+    onClick={() => dispatch(incrementByAmount(20))}
+  >
+    Increment by amount
+  </button>
+
+Result in browser:
+  - "Count is 242" after clicking multiple times
+  - Each click adds 20 to the total count
+  - Counter2 buttons still affect the same count!
+
+
+------------------------------------------------
+THE COMPLETE FLOW - HOW IT ALL WORKS TOGETHER
+------------------------------------------------
+
+1. User clicks "Increment" button in Counter.js
+
+2. onClick fires:
+   dispatch(increment())
+
+3. dispatch SENDS the increment action to the store
+
+4. The counterSlice REDUCER receives the action:
+   increment: (state) => { state.count += 1 }
+
+5. The Redux STORE updates the count value
+
+6. useSelector in Counter.js DETECTS the change
+
+7. Counter.js RE-RENDERS with the new count
+
+8. Counter2.js ALSO re-renders if it is reading
+   the same state!
+
+Simple version:
+  Button Click --> dispatch --> reducer --> store updates
+  --> useSelector detects change --> component re-renders
+
+
+------------------------------------------------
+ERROR YOU MIGHT SEE - setCount not defined
+------------------------------------------------
+If you see this error:
+  "setCount is not defined"
+  "setCount is not defined"
+
+It means you still have old useState code that uses
+setCount but you removed the useState hook.
+
+Fix: Remove any leftover setCount references and
+replace with dispatch(increment()) or dispatch(decrement())
+
+
+------------------------------------------------
+SUMMARY CHEAT SHEET
+------------------------------------------------
+
+  useSelector  = READ data from the store
+                 import { useSelector } from 'react-redux'
+                 const count = useSelector(state => state.counter.count)
+
+  useDispatch  = SEND actions to update the store
+                 import { useDispatch } from 'react-redux'
+                 const dispatch = useDispatch()
+
+  dispatch()   = HOW you send the action
+                 dispatch(increment())
+                 dispatch(decrement())
+                 dispatch(incrementByAmount(20))
+
+  Actions      = imported from your slice file
+                 import { increment, decrement, incrementByAmount }
+                   from '../redux/counterSlice'
+
+  Works ANYWHERE = Any component can use these hooks
+                   as long as Provider wraps the app in index.js
+
+
+------------------------------------------------
+BEFORE REDUX vs AFTER REDUX (Counter.js)
+------------------------------------------------
+
+BEFORE (using useState):
+  const [count, setCount] = useState(0)
+  onClick={() => setCount(count + 1)}
+  --> only THIS component knows about count
+
+AFTER (using Redux):
+  const count = useSelector(state => state.counter.count)
+  const dispatch = useDispatch()
+  onClick={() => dispatch(increment())}
+  --> the WHOLE APP knows about count
+  --> Counter2.js and any other component can
+      read and update the same count!
+
+================================================
+END OF NOTES
+================================================
