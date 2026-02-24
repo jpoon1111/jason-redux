@@ -940,3 +940,165 @@ AFTER (using Redux):
 ================================================
 END OF NOTES
 ================================================
+
+
+
+    Action vs Reducer
+
+    The slide keeps it nice and simple, which is the right way to think about it at first:
+      Action — used to change the state. It's the signal that something happened ("increment", "add 5", "reset").
+      Reducer — a function that takes in the current state and an action, and returns the new state. It's the logic that decides what the state looks like after that signal.
+      So the flow is always: you dispatch an action → the reducer receives it → new state is returned → UI updates.
+      They need each other. An action without a reducer does nothing, and a reducer without an action being dispatched never runs.
+
+    Great question — these two things work together and it's easy to confuse them.
+    Action is just a plain object that describes what happened. It has a type field and optionally a payload. Think of it like sending a message or a note:
+    js{ type: 'counter/increment' }
+    { type: 'counter/incrementByAmount', payload: 5 }
+    You don't write these by hand usually — action creators (like increment(), incrementByAmount(5)) generate them for you. When you call dispatch(increment()), you're sending that action object to the store.
+    Reducer is a function that responds to actions and decides how the state should change. It receives the current state and the action, then returns the new state:
+    jsif (action.type === 'counter/increment') {
+      state.count += 1
+    }
+    In Redux Toolkit's createSlice, you define both in one place, which is why it can feel blurry:
+    jsconst counterSlice = createSlice({
+      name: 'counter',
+      initialState: { count: 0 },
+      reducers: {
+        increment: (state) => { state.count += 1 },        // <- this is the reducer
+        incrementByAmount: (state, action) => {             // <- reducer with payload
+          state.count += action.payload
+        }
+      }
+    })
+
+    export const { increment, incrementByAmount } = counterSlice.actions  // <- these are the action creators
+    A simple analogy: imagine a bank. The action is the deposit slip you hand in ("deposit $50"). The reducer is the teller who reads the slip and actually updates your account balance. The teller (reducer) never acts without a slip (action), and the slip alone does nothing without the teller.
+
+
+
+    Here's the gist of RTK Query:
+        What it is: A data fetching and caching tool built into Redux Toolkit.
+        Setup (3 steps):
+
+        Create an API with createApi, define your endpoints and base URL
+        Add to your store — plug in the generated reducer and middleware
+        Use the auto-generated hooks in your components (useGetXxxQuery)
+
+        Why it's useful: It handles caching, deduplication, and loading states automatically. Multiple components requesting the same data share one request and stay in sync.
+
+
+        // Need to use the React-specific entry point to import createApi
+        import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
+
+
+
+
+    HOW FETCH WORKS IN REDUX (RTK Query)
+    =====================================
+
+
+    STEP 1 - SETUP THE API SERVICE (postsSlice.js)
+    -----------------------------------------------
+
+    You create an API service using createApi. You give it a reducerPath which is 
+    just a name for it in the store, and a baseUrl which is the address of the API. 
+    Everything you fetch will start with that base URL.
+
+    Code:
+        export const postsApi = createApi({
+            reducerPath: "postsApi",
+            baseQuery: fetchBaseQuery({
+                baseUrl: "https://jsonplaceholder.typicode.com/",
+            }),
+
+
+    STEP 2 - DEFINE YOUR ENDPOINTS
+    --------------------------------
+
+    Inside endpoints you define what you can fetch. getAllPosts hits /posts and 
+    returns every post. getPostById takes an id as an argument and hits /posts/5 
+    for example. Each one is a query meaning it is a GET request, just reading data.
+
+    Code:
+        endpoints: (builder) =>({
+            getAllPosts: builder.query({
+                query: () => "posts",           // fetches .../posts
+            }),
+            getPostById: builder.query({
+                query: (id) => `posts/${id}`,   // fetches .../posts/5
+            })
+        }),
+
+
+    STEP 3 - REDUX AUTO GENERATES HOOKS
+    -------------------------------------
+
+    You do not write these hooks yourself. Redux looks at your endpoints and 
+    automatically creates a hook for each one.
+
+        getAllPosts      becomes     useGetAllPostsQuery
+        getPostById     becomes     useGetPostByIdQuery
+
+    You just export them and use them anywhere in your app.
+
+    Code:
+        export const { useGetAllPostsQuery, useGetPostByIdQuery } = postsApi
+
+
+    STEP 4 - USE THE HOOK IN YOUR COMPONENT (Counter.js)
+    ------------------------------------------------------
+
+    When you call the hook in your component, Redux immediately fires a fetch 
+    request to the API. You get back three things to work with:
+
+        data        = the result from the API once the fetch completes
+        isLoading   = true while the request is still in progress
+        isError     = true if something went wrong
+
+    Code:
+        const { data, isLoading, isError } = useGetPostByIdQuery(5)
+
+    The number 5 is passed as the id argument, so Redux fetches /posts/5.
+
+
+    STEP 5 - DISPLAY THE DATA
+    ---------------------------
+
+    Once data is populated the component automatically re-renders and you can 
+    display it on screen. In the code JSON.stringify(data) was used to dump the 
+    raw data onto the screen just to confirm it was working.
+
+    Code:
+        return (
+            <div>{JSON.stringify(data)}</div>
+        )
+
+
+    THE BIG PICTURE
+    ----------------
+
+    1. Hook is called in the component
+    2. Redux automatically fires a fetch request to the API
+    3. isLoading is true while waiting
+    4. Data arrives from the API
+    5. Component re-renders automatically with the new data
+
+    You never call dispatch yourself.
+    You never manage loading state yourself.
+    RTK Query handles all of it for you.
+
+
+    KEY TERMS
+    ----------
+
+    createApi        = sets up the connection to your API
+    fetchBaseQuery   = the built in fetch function RTK Query uses
+    reducerPath      = the name of this API service in the Redux store
+    baseUrl          = the base address of the API
+    endpoints        = the list of things you can fetch from the API
+    builder.query    = defines a GET request endpoint
+    hooks            = auto generated functions you use in components to fetch data
+    data             = the result returned from the API
+    isLoading        = boolean that is true while the request is in progress
+    isError          = boolean that is true if the request failed

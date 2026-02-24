@@ -10,6 +10,7 @@ import { useSelector, useDispatch } from 'react-redux'
 // these are the functions we will pass into dispatch() to change the state
 // increment, decrement, incrementByAmount all come from counterSlice.actions
 import { increment, decrement, incrementByAmount } from '../redux/counterSlice'
+import { useGetAllPostsQuery } from '../redux/postsSlice';
 
 // ============================================================
 // COMPONENT
@@ -42,11 +43,16 @@ export default function Counter() {
   // you cannot change the store directly - you MUST go through dispatch
   const dispatch = useDispatch()
 
+  // const {data, isLoading, isError} = useGetAllPostsQuery()
+  const {data, isLoading, isError} = useGetPostByIdQuery(5)
+
   // ============================================================
   // JSX / TEMPLATE
   // ============================================================
   return (
     <div>
+      {JSON.stringify(data)}
+
       {/* count is the value we read from the store using useSelector above */}
       {/* it will automatically update every time the store changes */}
       <h1>Count is {count}</h1>
