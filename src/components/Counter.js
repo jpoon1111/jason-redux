@@ -10,12 +10,12 @@ import { useSelector, useDispatch } from 'react-redux'
 // these are the functions we will pass into dispatch() to change the state
 // increment, decrement, incrementByAmount all come from counterSlice.actions
 import { increment, decrement, incrementByAmount } from '../redux/counterSlice'
-import { useGetAllPostsQuery } from '../redux/postsSlice';
+import { useGetAllPostsQuery, useGetPostByIdQuery } from '../redux/postsSlice';
 
 // ============================================================
 // COMPONENT
 // ============================================================
-
+1
 export default function Counter() {
 
   // ============================================================
